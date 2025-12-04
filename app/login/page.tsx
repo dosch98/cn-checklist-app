@@ -1,14 +1,14 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { ComnovoLogo } from "@/components/comnovo-logo"
+import { Loader2 } from "lucide-react"
 
 export default function LoginPage() {
   const [username, setUsername] = useState("")
@@ -25,7 +25,6 @@ export default function LoginPage() {
     try {
       const supabase = createClient()
 
-      // Check credentials against admin_users table
       const { data: user, error: dbError } = await supabase
         .from("admin_users")
         .select("*")
@@ -37,8 +36,7 @@ export default function LoginPage() {
         throw new Error("Ungültige Anmeldedaten")
       }
 
-      // Set admin session cookie
-      document.cookie = `admin_session=${user.id}; path=/; max-age=${60 * 60 * 24 * 7}` // 7 days
+      document.cookie = `admin_session=${user.id}; path=/; max-age=${60 * 60 * 24 * 7}`
       document.cookie = `admin_name=${user.display_name}; path=/; max-age=${60 * 60 * 24 * 7}`
 
       router.push("/admin")
@@ -51,63 +49,66 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-muted p-6">
+    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
-        <Card>
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-6 w-6 text-primary-foreground"
-              >
-                <path d="M9 11l3 3L22 4" />
-                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
-              </svg>
+        <div className="mb-8 flex justify-center">
+          <ComnovoLogo className="h-12" />
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+          <div className="mb-6 text-center">
+            <h1 className="text-xl font-semibold text-foreground">Anmelden</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Checklist-System für Inbetriebnahme</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username" className="text-sm font-medium">
+                Benutzername
+              </Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="Benutzername"
+                required
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
+                className="h-10"
+              />
             </div>
-            <CardTitle className="text-2xl">Admin Login</CardTitle>
-            <CardDescription>Melden Sie sich an, um auf das Checklist-System zuzugreifen</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin}>
-              <div className="flex flex-col gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="username">Benutzername</Label>
-                  <Input
-                    id="username"
-                    type="text"
-                    placeholder="Benutzername eingeben"
-                    required
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    autoComplete="username"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="password">Passwort</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Passwort eingeben"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="current-password"
-                  />
-                </div>
-                {error && <p className="text-sm text-destructive">{error}</p>}
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Anmeldung..." : "Anmelden"}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-medium">
+                Passwort
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Passwort"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                className="h-10"
+              />
+            </div>
+
+            {error && <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</div>}
+
+            <Button type="submit" className="h-10 w-full" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Anmeldung...
+                </>
+              ) : (
+                "Anmelden"
+              )}
+            </Button>
+          </form>
+        </div>
+
+        <p className="mt-6 text-center text-xs text-muted-foreground">&copy; {new Date().getFullYear()} Comnovo GmbH</p>
       </div>
     </div>
   )
